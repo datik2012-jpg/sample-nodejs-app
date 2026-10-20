@@ -27,44 +27,47 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Start application and run tests
+      - name: Start application
         shell: bash
         env:
           PORT: '8080'
-          TEST_BASE_URL: http://127.0.0.1:8080
         run: |
-          set -euo pipefail
-
           node app.js > app.log 2>&1 &
-          APP_PID=$!
+          echo $! > app.pid
 
-          trap 'kill "$APP_PID" 2>/dev/null || true' EXIT
-
-          ready=false
-
+      - name: Wait for application
+        shell: bash
+        run: |
           for attempt in {1..30}; do
-            if ! kill -0 "$APP_PID" 2>/dev/null; then
-              echo "Application exited before becoming ready"
+            if ! kill -0 "$(cat app.pid)" 2>/dev/null; then
+              echo "Application stopped during startup"
               exit 1
             fi
 
             if curl --fail --silent --max-time 2 \
-              "$TEST_BASE_URL/ready" > /dev/null; then
-              ready=true
-              break
+              http://127.0.0.1:8080/ready > /dev/null; then
+              echo "Application is ready"
+              exit 0
             fi
 
             sleep 1
           done
 
-          if [ "$ready" != "true" ]; then
-            echo "Application did not become ready"
-            exit 1
-          fi
+          echo "Application did not become ready"
+          exit 1
 
       - name: Run automated tests
+        env:
+          TEST_BASE_URL: http://127.0.0.1:8080
         run: npm test
 
+      - name: Stop application
+        if: always()
+        shell: bash
+        run: |
+          if [ -f app.pid ]; then
+            kill "$(cat app.pid)" 2>/dev/null || true
+          fi
 
       - name: Show application logs
         if: always()
