@@ -1,0 +1,25 @@
+# Dependencies are installed inside the image
+node_modules/
+
+# Git history and GitHub workflows
+.git/
+.github/
+.gitignore
+
+# Tests already run separately in CI
+tests/
+
+# Logs and temporary process files
+*.log
+*.pid
+
+# Local environment settings
+.env
+.env.*
+
+# Editor settings
+.vscode/
+.idea/
+
+# Documentation
+README.md
