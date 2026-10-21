@@ -72,3 +72,8 @@ jobs:
       - name: Show application logs
         if: always()
         run: cat app.log 2>/dev/null || true
+
+  docker-build:
+    needs: build-and-test
+    if: ${{ github.ref == 'refs/heads/feature/add-ci' }}
+    uses: ./.github/workflows/docker-build-ci.yaml

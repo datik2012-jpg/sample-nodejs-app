@@ -1,25 +1,22 @@
 name: Build Docker image
 
 on:
-  workflow_run:
-    workflows: ["CI Node.js pipeline run tests"]
-    types: [completed]
+  workflow_call:
 
 permissions:
   contents: read
 
 jobs:
   docker-build:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: Checkout CI run head commit
+      - name: Checkout tested commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Build Docker image
-        run: docker build -t node-api-feature:${{ github.event.workflow_run.head_sha }} .
+        run: docker build -t node-api-feature:${{ github.sha }} .
