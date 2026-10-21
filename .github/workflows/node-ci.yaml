@@ -1,10 +1,9 @@
-name: CI Node.js pipeline run tests
+name: CI Node.js pipeline run tests and build image
 
 on:
   push:
-    branches: [main, feature/add-ci]
-  pull_request:
-    branches: [main]
+    branches:
+      - 'feature/**'
 
 permissions:
   contents: read
@@ -75,5 +74,11 @@ jobs:
 
   docker-build:
     needs: build-and-test
-    if: ${{ github.ref == 'refs/heads/feature/add-ci' }}
-    uses: ./.github/workflows/docker-build-ci.yaml
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t node-api-feature:${{ github.sha }} . 
