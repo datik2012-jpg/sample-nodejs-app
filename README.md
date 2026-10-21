@@ -30,3 +30,20 @@ http://127.0.0.1:8080/my-app
 ##see root_access_total 1 - increase when user opened /myapp
 
 curl http://127.0.0.1:8080/metrics
+
+## local docker image creation:
+docker build -t nodejs-app:1.0.0 .
+
+## check docker image: docekr images
+nodejs-app:1.0.0 852ae0f2e07e        280MB         69.3MB
+
+## run docker image
+
+docker run -d -p 8080:8080 --name running-nodejs-app nodejs-app:1.0.0        
+
+## validate docker is running docker ps
+CONTAINER ID   IMAGE              COMMAND                  CREATED         STATUS         PORTS                                         NAMES
+475da8644d10   nodejs-app:1.0.0   "docker-entrypoint.s…"   6 seconds ago   Up 5 seconds   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp   running-nodejs-app
+
+## open browser and check  the app:
+ http://127.0.0.1:8080/myapp
