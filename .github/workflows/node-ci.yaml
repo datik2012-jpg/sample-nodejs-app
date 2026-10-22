@@ -80,8 +80,26 @@ jobs:
         if: always()
         run: cat app.log 2>/dev/null || true
 
+
+  sast:
+    name: Snyk SAST
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v5
+
+      - name: Set up Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Scan source code
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk code test --severity-threshold=high   
+        
   docker-build:
-    needs: build-and-test
+    needs: [build-and-test, sast]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 
@@ -91,4 +109,4 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Build Docker image
-        run: docker build -t node-api-feature:${{ github.sha }} . 
+        run: docker build -t node-api-feature:${{ github.sha }} .       
