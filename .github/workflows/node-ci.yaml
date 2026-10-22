@@ -134,7 +134,7 @@ jobs:
       
       - name: Show OIDC identity   # added this part to troubleshoot aws access fail
         if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const token = await core.getIDToken('sts.amazonaws.com');
@@ -146,7 +146,7 @@ jobs:
 
       - name: Configure AWS credentials
         if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           role-to-assume: arn:aws:iam::438465166774:role/github-actions-ecr-push
           aws-region: eu-central-1
