@@ -134,7 +134,7 @@ jobs:
       
       - name: Show OIDC identity   # added this part to troubleshoot aws access fail
         if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const token = await core.getIDToken('sts.amazonaws.com');
