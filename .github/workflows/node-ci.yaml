@@ -3,7 +3,13 @@ name: CI Node.js pipeline run tests and build image
 on:
   push:
     branches:
+      - 'feature'
       - 'feature/**'
+
+  pull_request:
+    branches:
+      - develop
+      - main      
 
 permissions:
   contents: read
