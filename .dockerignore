@@ -23,3 +23,7 @@ tests/
 
 # Documentation
 README.md
+
+
+#debug
+npm-debug.log*
