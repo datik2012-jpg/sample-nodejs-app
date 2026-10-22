@@ -109,4 +109,19 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Build Docker image
-        run: docker build -t node-api-feature:${{ github.sha }} .       
+        run: docker build -t node-api-feature:${{ github.sha }} . 
+        
+        
+      - name: Build Docker image
+        run: docker build -t node-api-feature:${{ github.sha }} .
+
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: node-api-feature:${{ github.sha }}
+          scanners: vuln
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: false      
