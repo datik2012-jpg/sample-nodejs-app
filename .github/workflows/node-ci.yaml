@@ -5,6 +5,7 @@ on:
     branches:
       - 'feature'
       - 'feature/**'
+      - develop
 
   pull_request:
     branches:
@@ -102,6 +103,11 @@ jobs:
     needs: [build-and-test, sast]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    
+    # apply to aws aim OIDC and get the token for aws authorization
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v5
@@ -124,4 +130,23 @@ jobs:
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
-          ignore-unfixed: false      
+          ignore-unfixed: false 
+      
+      - name: Configure AWS credentials
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::438465166774:role/github-actions-ecr-push
+          aws-region: eu-central-1
+
+      - name: Login to Amazon ECR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push image to Amazon ECR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        env:
+          ECR_REPOSITORY: 438465166774.dkr.ecr.eu-central-1.amazonaws.com/sample-nodejs-app-ecr-registry
+        run: |
+          docker tag node-api-feature:${{ github.sha }} "$ECR_REPOSITORY:${{ github.sha }}"
+          docker push "$ECR_REPOSITORY:${{ github.sha }}"    
