@@ -1,4 +1,4 @@
 replicaCount: 2
 
 image:
-  tag: "689c51ab40f14cf5f45c8d2d3622ddc1380c57cf"
+  tag: "develop-a77cbab0589018bd129ad7d625fc5cbcc38c98f8"
