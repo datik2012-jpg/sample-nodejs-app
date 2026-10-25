@@ -117,9 +117,6 @@ jobs:
       - name: Build Docker image
         run: docker build -t node-api-feature:${{ github.sha }} . 
         
-        
-      - name: Build Docker image
-        run: docker build -t node-api-feature:${{ github.sha }} .
 
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@v0.36.0
@@ -161,4 +158,4 @@ jobs:
           ECR_REPOSITORY: 438465166774.dkr.ecr.eu-central-1.amazonaws.com/sample-nodejs-app-ecr-registry
         run: |
           docker tag node-api-feature:${{ github.sha }} "$ECR_REPOSITORY:develop-${{ github.sha }}"
-          docker push "$ECR_REPOSITORY:develop-${{ github.sha }}"    
+          docker push "$ECR_REPOSITORY:develop-${{ github.sha }}" 
