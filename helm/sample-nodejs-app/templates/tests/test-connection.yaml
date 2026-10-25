@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "sample-nodejs-app.fullname" . }}:{{ .Values.service.port }}']
+      args: ['http://{{ include "sample-nodejs-app.fullname" . }}:{{ .Values.service.port }}/ready']
   restartPolicy: Never
