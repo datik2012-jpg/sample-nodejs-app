@@ -158,4 +158,4 @@ jobs:
           ECR_REPOSITORY: 438465166774.dkr.ecr.eu-central-1.amazonaws.com/sample-nodejs-app-ecr-registry
         run: |
           docker tag node-api-feature:${{ github.sha }} "$ECR_REPOSITORY:develop-${{ github.sha }}"
-          docker push "$ECR_REPOSITORY:develop-${{ github.sha }}"    
+          docker push "$ECR_REPOSITORY:develop-${{ github.sha }}" 
