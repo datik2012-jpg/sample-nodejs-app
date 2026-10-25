@@ -17,7 +17,7 @@ permissions:
 
 jobs:
 
-  detect-changes:  # when values-staging tag changed we do not want to build and publish new image
+  detect-changes:  # Skip ECR publishing when only values-staging.yaml changes
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -193,3 +193,69 @@ jobs:
         run: |
           docker tag node-api-feature:${{ github.sha }} "$ECR_REPOSITORY:develop-${{ github.sha }}"
           docker push "$ECR_REPOSITORY:develop-${{ github.sha }}" 
+
+  
+  update-staging-image:
+    needs: [docker-build, detect-changes]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.publish == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v5
+        with:
+          ref: develop
+
+      - name: Update staging image tag
+        env:
+          IMAGE_TAG: develop-${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          path = Path("helm/sample-nodejs-app/values-staging.yaml")
+          content = path.read_text()
+
+          updated, count = re.subn(
+              r'^  tag:.*$',
+              f'  tag: "{os.environ["IMAGE_TAG"]}"',
+              content,
+              flags=re.MULTILINE,
+          )
+
+          if count != 1:
+              raise SystemExit("Expected exactly one image tag")
+
+          path.write_text(updated)
+          PY
+      
+          
+
+      - name: Check that develop still matches the built image 
+        env:
+          BUILT_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$(git rev-parse HEAD)" != "$BUILT_SHA" ]]; then
+            echo "Develop has newer commits. Use the newer workflow run."
+            exit 1
+          fi    
+
+      - name: Create staging image pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ github.token }}
+          base: develop
+          branch: automation/staging-image-${{ github.sha }}
+          add-paths: helm/sample-nodejs-app/values-staging.yaml
+          commit-message: "Update staging image to develop-${{ github.sha }}"
+          title: "Update staging image to develop-${{ github.sha }}"
+          body: |
+            Update the staging image to the image published by this workflow.
+            Image tag: develop-${{ github.sha }}        
