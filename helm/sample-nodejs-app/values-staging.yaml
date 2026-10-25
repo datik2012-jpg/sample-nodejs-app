@@ -2,3 +2,18 @@ replicaCount: 2
 
 image:
   tag: "develop-a77cbab0589018bd129ad7d625fc5cbcc38c98f8"
+
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /ready
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
