@@ -16,6 +16,40 @@ permissions:
   contents: read
 
 jobs:
+
+  detect-changes:  # when values-staging tag changed we do not want to build and publish new image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      publish: ${{ steps.changes.outputs.publish }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check whether to publish an image
+        id: changes
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          publish=true
+
+          if [[ "$EVENT_NAME" == "push" &&
+                -n "$BEFORE_SHA" &&                  #not empty - can be when first time new branch
+                ! "$BEFORE_SHA" =~ ^0+$ ]]; then     #not 0000000000 when first time new branch
+            changed_files=$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")
+
+            if [[ "$changed_files" == "helm/sample-nodejs-app/values-staging.yaml" ]]; then
+              publish=false
+            fi
+          fi
+
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+
   build-and-test:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -100,7 +134,7 @@ jobs:
         run: snyk code test --severity-threshold=high   
         
   docker-build:
-    needs: [build-and-test, sast]
+    needs: [build-and-test, sast, detect-changes]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     
@@ -130,7 +164,7 @@ jobs:
           ignore-unfixed: false 
       
       - name: Show OIDC identity   # added this part to troubleshoot aws access fail
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.publish == 'true'
         uses: actions/github-script@v8
         with:
           script: |
@@ -142,18 +176,18 @@ jobs:
             core.info(`aud: ${claims.aud}`);
 
       - name: Configure AWS credentials
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.publish == 'true'
         uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           role-to-assume: arn:aws:iam::438465166774:role/github-actions-ecr-push
           aws-region: eu-central-1
 
       - name: Login to Amazon ECR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.publish == 'true'
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push image to Amazon ECR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.publish == 'true'
         env:
           ECR_REPOSITORY: 438465166774.dkr.ecr.eu-central-1.amazonaws.com/sample-nodejs-app-ecr-registry
         run: |
