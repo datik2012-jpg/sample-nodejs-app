@@ -117,9 +117,6 @@ jobs:
       - name: Build Docker image
         run: docker build -t node-api-feature:${{ github.sha }} . 
         
-        
-      - name: Build Docker image
-        run: docker build -t node-api-feature:${{ github.sha }} .
 
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@v0.36.0
