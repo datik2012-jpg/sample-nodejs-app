@@ -1,0 +1,33 @@
+# For a fresh independent cluster; pass your own image.repository and image.tag.
+# Do not combine with the AWS values-staging.yaml.
+replicaCount: 2
+
+image:
+  repository: replace-with-your-registry/sample-nodejs-app
+  tag: replace-with-your-image-tag
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+httpRoute:
+  enabled: false
+
+autoscaling:
+  enabled: false
+
+# Health probes, resource settings and non-root settings inherit from values.yaml.
